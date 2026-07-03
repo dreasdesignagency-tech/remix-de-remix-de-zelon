@@ -115,6 +115,7 @@ function CalendarPage() {
     return () => clearInterval(id);
   }, []);
 
+  const didInitDate = useRef(false);
   useEffect(() => {
     try {
       const saved = sessionStorage.getItem("flow-calendar-date");
@@ -122,9 +123,29 @@ function CalendarPage() {
         const d = parseISO(saved);
         if (!Number.isNaN(d.getTime())) { setSelected(d); setCursor(d); }
         sessionStorage.removeItem("flow-calendar-date");
+        didInitDate.current = true;
       }
     } catch {}
   }, []);
+
+  // Auto-jump to the nearest date with content so users see something on open.
+  useEffect(() => {
+    if (didInitDate.current) return;
+    if (tasks.length === 0 && events.length === 0) return;
+    const todayStr = format(new Date(), "yyyy-MM-dd");
+    const dates: string[] = [];
+    tasks.forEach((t) => { if (t.date) dates.push(t.date); });
+    events.forEach((e) => { if (e.date) dates.push(e.date); });
+    if (dates.length === 0) { didInitDate.current = true; return; }
+    const upcoming = dates.filter((d) => d >= todayStr).sort();
+    const past = dates.filter((d) => d < todayStr).sort();
+    const target = upcoming[0] ?? past[past.length - 1];
+    if (target) {
+      const d = parseISO(target);
+      if (!Number.isNaN(d.getTime())) { setSelected(d); setCursor(d); }
+    }
+    didInitDate.current = true;
+  }, [tasks, events]);
 
   useEffect(() => {
     if (!timelineRef.current) return;
