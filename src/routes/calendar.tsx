@@ -83,6 +83,16 @@ function toMin(t?: string) {
   return h * 60 + (m || 0);
 }
 
+function firstTimedHour(items: Task[]) {
+  const first = items
+    .map((t) => toMin(t.startTime))
+    .filter((v): v is number => v != null)
+    .sort((a, b) => a - b)[0];
+
+  if (first == null) return HOUR_START;
+  return Math.max(HOUR_START, Math.min(HOUR_END, Math.floor(first / 60)));
+}
+
 function CalendarPage() {
   const tasks = useApp((s) => s.tasks);
   const events = useApp((s) => s.events);
@@ -196,18 +206,19 @@ function CalendarPage() {
   const selectedStr = format(selected, "yyyy-MM-dd");
   const dayTasks = (tasksByDay.get(selectedStr) ?? [])
     .sort((a, b) => (a.startTime ?? "99").localeCompare(b.startTime ?? "99"));
+  const weekTasks = useMemo(
+    () => weekDays.flatMap((d) => tasksByDay.get(format(d, "yyyy-MM-dd")) ?? []),
+    [weekDays, tasksByDay]
+  );
+  const timelineStartHour = view === "week" && dayTasks.length === 0
+    ? firstTimedHour(weekTasks)
+    : firstTimedHour(dayTasks);
 
-  // Scroll timeline to first event/task of the selected day
+  // Keep the first event/task at the top of the timeline.
   useEffect(() => {
     if (!timelineRef.current) return;
-    const times = dayTasks
-      .map((t) => toMin(t.startTime))
-      .filter((v): v is number => v != null)
-      .sort((a, b) => a - b);
-    const targetMin = times[0] ?? (now.getHours() * 60 + now.getMinutes());
-    const offset = ((targetMin - HOUR_START * 60) / 60) * HOUR_PX - 80;
-    timelineRef.current.scrollTop = Math.max(0, offset);
-  }, [view, selectedStr, dayTasks.length]); // eslint-disable-line
+    timelineRef.current.scrollTop = 0;
+  }, [view, selectedStr, dayTasks.length, timelineStartHour]);
 
   // --- metrics ---
   const todayStr = format(new Date(), "yyyy-MM-dd");
@@ -465,6 +476,7 @@ function CalendarPage() {
               timelineRef={timelineRef}
               getColor={getColor}
               eventCatMap={eventCatMap}
+              startHour={timelineStartHour}
             />
           )}
           {view === "day" && (
@@ -478,6 +490,7 @@ function CalendarPage() {
               timelineRef={timelineRef}
               getColor={getColor}
               eventCatMap={eventCatMap}
+              startHour={timelineStartHour}
             />
           )}
         </section>
