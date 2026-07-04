@@ -717,7 +717,6 @@ function WeekTimeline({ days, tasksByDay, selected, onPickDay, onPickTask, onCre
             const today = isToday(d);
             return (
               <div key={d.toISOString()} className="relative border-l border-border/30">
-                {HOURS.map((h) => (
                 {visibleHours.map((h) => (
                   <button
                     key={h}
