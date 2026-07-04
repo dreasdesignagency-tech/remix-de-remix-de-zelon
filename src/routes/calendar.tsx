@@ -105,7 +105,6 @@ function CalendarPage() {
   const [view, setView] = useState<View>("week");
   const [cursor, setCursor] = useState(new Date());
   const [selected, setSelected] = useState(new Date());
-  const [now, setNow] = useState(new Date());
   const [filter, setFilter] = useState<"all" | keyof typeof CATEGORY_META>("all");
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -119,11 +118,6 @@ function CalendarPage() {
   const [dayOverview, setDayOverview] = useState<Date | null>(null);
 
   const timelineRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 60_000);
-    return () => clearInterval(id);
-  }, []);
 
   const didInitDate = useRef(false);
   useEffect(() => {
@@ -714,7 +708,6 @@ function WeekTimeline({ days, tasksByDay, selected, onPickDay, onPickTask, onCre
           {days.map((d) => {
             const key = format(d, "yyyy-MM-dd");
             const list = tasksByDay.get(key) ?? [];
-            const today = isToday(d);
             return (
               <div key={d.toISOString()} className="relative border-l border-border/30">
                 {visibleHours.map((h) => (
