@@ -147,18 +147,6 @@ function CalendarPage() {
     didInitDate.current = true;
   }, [tasks, events]);
 
-  useEffect(() => {
-    if (!timelineRef.current) return;
-    const key = format(selected, "yyyy-MM-dd");
-    const items = tasksByDay.get(key) ?? [];
-    const times = items
-      .map((t) => toMin(t.startTime))
-      .filter((v): v is number => v != null)
-      .sort((a, b) => a - b);
-    const targetMin = times[0] ?? (now.getHours() * 60 + now.getMinutes());
-    const offset = ((targetMin - HOUR_START * 60) / 60) * HOUR_PX - 80;
-    timelineRef.current.scrollTop = Math.max(0, offset);
-  }, [view, selected, tasksByDay]); // eslint-disable-line
 
   const eventCatMap = useMemo(() => {
     const m = new Map<string, EventCategory>();
