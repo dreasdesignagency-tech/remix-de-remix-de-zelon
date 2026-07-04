@@ -634,10 +634,14 @@ interface WeekTimelineProps {
   timelineRef: React.RefObject<HTMLDivElement | null>;
   getColor: (t: Task) => string;
   eventCatMap: Map<string, EventCategory>;
+  startHour: number;
 }
 
-function WeekTimeline({ days, tasksByDay, selected, onPickDay, onPickTask, onCreateAt, timelineRef, getColor, eventCatMap }: WeekTimelineProps) {
+function WeekTimeline({ days, tasksByDay, selected, onPickDay, onPickTask, onCreateAt, timelineRef, getColor, eventCatMap, startHour }: WeekTimelineProps) {
   const hasAllDay = days.some((d) => (tasksByDay.get(format(d, "yyyy-MM-dd")) ?? []).some((t) => !t.startTime));
+  const visibleHours = HOURS.filter((h) => h >= startHour);
+  const timelineTopMin = startHour * 60;
+  const timelineHeight = visibleHours.length * HOUR_PX;
   return (
     <div className="flex flex-col h-full min-h-0">
       <div className="grid border-b border-border/40" style={{ gridTemplateColumns: `64px repeat(${days.length}, 1fr)` }}>
@@ -700,7 +704,7 @@ function WeekTimeline({ days, tasksByDay, selected, onPickDay, onPickTask, onCre
       <div ref={timelineRef} className="flex-1 overflow-y-auto scrollbar-hide relative">
         <div className="grid relative" style={{ gridTemplateColumns: `64px repeat(${days.length}, 1fr)` }}>
           <div className="relative">
-            {HOURS.map((h) => (
+            {visibleHours.map((h) => (
               <div key={h} style={{ height: HOUR_PX }} className="relative">
                 <span className="absolute -top-2 right-2 text-[10px] text-muted-foreground tabular-nums">{String(h).padStart(2, "0")}:00</span>
               </div>
@@ -714,6 +718,7 @@ function WeekTimeline({ days, tasksByDay, selected, onPickDay, onPickTask, onCre
             return (
               <div key={d.toISOString()} className="relative border-l border-border/30">
                 {HOURS.map((h) => (
+                {visibleHours.map((h) => (
                   <button
                     key={h}
                     style={{ height: HOUR_PX }}
@@ -725,11 +730,12 @@ function WeekTimeline({ days, tasksByDay, selected, onPickDay, onPickTask, onCre
                 {list.map((t) => {
                   const startM = toMin(t.startTime);
                   if (startM == null) return null;
+                  if (startM < timelineTopMin) return null;
                   const endM = toMin(t.endTime) ?? startM + 60;
                   const minTop = 0;
-                  const maxBottom = (HOUR_END - HOUR_START + 1) * HOUR_PX;
-                  const rawTop = ((startM - HOUR_START * 60) / 60) * HOUR_PX;
-                  const rawBottom = ((endM - HOUR_START * 60) / 60) * HOUR_PX;
+                  const maxBottom = timelineHeight;
+                  const rawTop = ((startM - timelineTopMin) / 60) * HOUR_PX;
+                  const rawBottom = ((endM - timelineTopMin) / 60) * HOUR_PX;
                   const top = Math.max(minTop, rawTop);
                   const bottom = Math.min(maxBottom, rawBottom);
                   const height = Math.max(28, bottom - top - 2);
