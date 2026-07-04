@@ -147,12 +147,6 @@ function CalendarPage() {
     didInitDate.current = true;
   }, [tasks, events]);
 
-  useEffect(() => {
-    if (!timelineRef.current) return;
-    const m = now.getHours() * 60 + now.getMinutes();
-    const offset = ((m - HOUR_START * 60) / 60) * HOUR_PX - 140;
-    timelineRef.current.scrollTop = Math.max(0, offset);
-  }, [view]); // eslint-disable-line
 
   const eventCatMap = useMemo(() => {
     const m = new Map<string, EventCategory>();
@@ -202,6 +196,18 @@ function CalendarPage() {
   const selectedStr = format(selected, "yyyy-MM-dd");
   const dayTasks = (tasksByDay.get(selectedStr) ?? [])
     .sort((a, b) => (a.startTime ?? "99").localeCompare(b.startTime ?? "99"));
+
+  // Scroll timeline to first event/task of the selected day
+  useEffect(() => {
+    if (!timelineRef.current) return;
+    const times = dayTasks
+      .map((t) => toMin(t.startTime))
+      .filter((v): v is number => v != null)
+      .sort((a, b) => a - b);
+    const targetMin = times[0] ?? (now.getHours() * 60 + now.getMinutes());
+    const offset = ((targetMin - HOUR_START * 60) / 60) * HOUR_PX - 80;
+    timelineRef.current.scrollTop = Math.max(0, offset);
+  }, [view, selectedStr, dayTasks.length]); // eslint-disable-line
 
   // --- metrics ---
   const todayStr = format(new Date(), "yyyy-MM-dd");
