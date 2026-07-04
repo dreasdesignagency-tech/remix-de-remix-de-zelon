@@ -83,6 +83,16 @@ function toMin(t?: string) {
   return h * 60 + (m || 0);
 }
 
+function firstTimedHour(items: Task[]) {
+  const first = items
+    .map((t) => toMin(t.startTime))
+    .filter((v): v is number => v != null)
+    .sort((a, b) => a - b)[0];
+
+  if (first == null) return HOUR_START;
+  return Math.max(HOUR_START, Math.min(HOUR_END, Math.floor(first / 60)));
+}
+
 function CalendarPage() {
   const tasks = useApp((s) => s.tasks);
   const events = useApp((s) => s.events);
@@ -95,7 +105,6 @@ function CalendarPage() {
   const [view, setView] = useState<View>("week");
   const [cursor, setCursor] = useState(new Date());
   const [selected, setSelected] = useState(new Date());
-  const [now, setNow] = useState(new Date());
   const [filter, setFilter] = useState<"all" | keyof typeof CATEGORY_META>("all");
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -109,11 +118,6 @@ function CalendarPage() {
   const [dayOverview, setDayOverview] = useState<Date | null>(null);
 
   const timelineRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 60_000);
-    return () => clearInterval(id);
-  }, []);
 
   const didInitDate = useRef(false);
   useEffect(() => {
@@ -196,18 +200,19 @@ function CalendarPage() {
   const selectedStr = format(selected, "yyyy-MM-dd");
   const dayTasks = (tasksByDay.get(selectedStr) ?? [])
     .sort((a, b) => (a.startTime ?? "99").localeCompare(b.startTime ?? "99"));
+  const weekTasks = useMemo(
+    () => weekDays.flatMap((d) => tasksByDay.get(format(d, "yyyy-MM-dd")) ?? []),
+    [weekDays, tasksByDay]
+  );
+  const timelineStartHour = view === "week" && dayTasks.length === 0
+    ? firstTimedHour(weekTasks)
+    : firstTimedHour(dayTasks);
 
-  // Scroll timeline to first event/task of the selected day
+  // Keep the first event/task at the top of the timeline.
   useEffect(() => {
     if (!timelineRef.current) return;
-    const times = dayTasks
-      .map((t) => toMin(t.startTime))
-      .filter((v): v is number => v != null)
-      .sort((a, b) => a - b);
-    const targetMin = times[0] ?? (now.getHours() * 60 + now.getMinutes());
-    const offset = ((targetMin - HOUR_START * 60) / 60) * HOUR_PX - 80;
-    timelineRef.current.scrollTop = Math.max(0, offset);
-  }, [view, selectedStr, dayTasks.length]); // eslint-disable-line
+    timelineRef.current.scrollTop = 0;
+  }, [view, selectedStr, dayTasks.length, timelineStartHour]);
 
   // --- metrics ---
   const todayStr = format(new Date(), "yyyy-MM-dd");
@@ -465,6 +470,7 @@ function CalendarPage() {
               timelineRef={timelineRef}
               getColor={getColor}
               eventCatMap={eventCatMap}
+              startHour={timelineStartHour}
             />
           )}
           {view === "day" && (
@@ -478,6 +484,7 @@ function CalendarPage() {
               timelineRef={timelineRef}
               getColor={getColor}
               eventCatMap={eventCatMap}
+              startHour={timelineStartHour}
             />
           )}
         </section>
@@ -621,10 +628,14 @@ interface WeekTimelineProps {
   timelineRef: React.RefObject<HTMLDivElement | null>;
   getColor: (t: Task) => string;
   eventCatMap: Map<string, EventCategory>;
+  startHour: number;
 }
 
-function WeekTimeline({ days, tasksByDay, selected, onPickDay, onPickTask, onCreateAt, timelineRef, getColor, eventCatMap }: WeekTimelineProps) {
+function WeekTimeline({ days, tasksByDay, selected, onPickDay, onPickTask, onCreateAt, timelineRef, getColor, eventCatMap, startHour }: WeekTimelineProps) {
   const hasAllDay = days.some((d) => (tasksByDay.get(format(d, "yyyy-MM-dd")) ?? []).some((t) => !t.startTime));
+  const visibleHours = HOURS.filter((h) => h >= startHour);
+  const timelineTopMin = startHour * 60;
+  const timelineHeight = visibleHours.length * HOUR_PX;
   return (
     <div className="flex flex-col h-full min-h-0">
       <div className="grid border-b border-border/40" style={{ gridTemplateColumns: `64px repeat(${days.length}, 1fr)` }}>
@@ -687,7 +698,7 @@ function WeekTimeline({ days, tasksByDay, selected, onPickDay, onPickTask, onCre
       <div ref={timelineRef} className="flex-1 overflow-y-auto scrollbar-hide relative">
         <div className="grid relative" style={{ gridTemplateColumns: `64px repeat(${days.length}, 1fr)` }}>
           <div className="relative">
-            {HOURS.map((h) => (
+            {visibleHours.map((h) => (
               <div key={h} style={{ height: HOUR_PX }} className="relative">
                 <span className="absolute -top-2 right-2 text-[10px] text-muted-foreground tabular-nums">{String(h).padStart(2, "0")}:00</span>
               </div>
@@ -697,10 +708,9 @@ function WeekTimeline({ days, tasksByDay, selected, onPickDay, onPickTask, onCre
           {days.map((d) => {
             const key = format(d, "yyyy-MM-dd");
             const list = tasksByDay.get(key) ?? [];
-            const today = isToday(d);
             return (
               <div key={d.toISOString()} className="relative border-l border-border/30">
-                {HOURS.map((h) => (
+                {visibleHours.map((h) => (
                   <button
                     key={h}
                     style={{ height: HOUR_PX }}
@@ -712,11 +722,12 @@ function WeekTimeline({ days, tasksByDay, selected, onPickDay, onPickTask, onCre
                 {list.map((t) => {
                   const startM = toMin(t.startTime);
                   if (startM == null) return null;
+                  if (startM < timelineTopMin) return null;
                   const endM = toMin(t.endTime) ?? startM + 60;
                   const minTop = 0;
-                  const maxBottom = (HOUR_END - HOUR_START + 1) * HOUR_PX;
-                  const rawTop = ((startM - HOUR_START * 60) / 60) * HOUR_PX;
-                  const rawBottom = ((endM - HOUR_START * 60) / 60) * HOUR_PX;
+                  const maxBottom = timelineHeight;
+                  const rawTop = ((startM - timelineTopMin) / 60) * HOUR_PX;
+                  const rawBottom = ((endM - timelineTopMin) / 60) * HOUR_PX;
                   const top = Math.max(minTop, rawTop);
                   const bottom = Math.min(maxBottom, rawBottom);
                   const height = Math.max(28, bottom - top - 2);
