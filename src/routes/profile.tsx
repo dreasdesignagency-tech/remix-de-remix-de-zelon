@@ -102,9 +102,10 @@ function ProfilePage() {
                 </div>
               )}
             </div>
-            <button onClick={() => inputRef.current?.click()} className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-neon text-neon-foreground flex items-center justify-center glow-neon hover:brightness-110">
-              <Camera className="w-4 h-4" />
+            <button disabled={uploading} onClick={() => inputRef.current?.click()} className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-neon text-neon-foreground flex items-center justify-center glow-neon hover:brightness-110 disabled:opacity-60">
+              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
             </button>
+
             <input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden"
               onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }} />
           </div>
