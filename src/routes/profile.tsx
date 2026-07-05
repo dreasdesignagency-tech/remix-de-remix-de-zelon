@@ -6,13 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Camera, Save } from "lucide-react";
+import { Camera, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/profile")({
   component: ProfilePage,
   head: () => ({ meta: [{ title: "Perfil — Zelon" }] }),
 });
+
 
 const MAX_SIZE = 5 * 1024 * 1024;
 const ALLOWED = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
