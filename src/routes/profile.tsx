@@ -21,6 +21,7 @@ const ALLOWED = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
 
 function ProfilePage() {
   const profile = useApp((s) => s.profile);
+  const userId = useApp((s) => s.userId);
   const updateProfile = useApp((s) => s.updateProfile);
 
   const [name, setName] = useState(profile.name);
@@ -29,9 +30,10 @@ function ProfilePage() {
   const [bio, setBio] = useState(profile.bio);
   const [weeklyGoal, setWeeklyGoal] = useState(profile.weeklyGoal);
   const [preview, setPreview] = useState<string | undefined>(profile.avatar);
+  const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = (file: File) => {
+  const handleFile = async (file: File) => {
     if (!ALLOWED.includes(file.type)) {
       toast.error("Use uma imagem PNG, JPG ou WEBP");
       return;
@@ -40,9 +42,34 @@ function ProfilePage() {
       toast.error("A imagem deve ter no máximo 5MB");
       return;
     }
+    if (!userId) {
+      toast.error("Faça login para salvar a foto");
+      return;
+    }
+    // instant local preview
     const reader = new FileReader();
     reader.onload = () => setPreview(reader.result as string);
     reader.readAsDataURL(file);
+
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+      const path = `${userId}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+      const url = `${data.publicUrl}?t=${Date.now()}`;
+      setPreview(url);
+      updateProfile({ avatar: url });
+      toast.success("Foto atualizada");
+    } catch (err) {
+      console.error(err);
+      toast.error("Não foi possível enviar a foto");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const save = () => {
@@ -56,10 +83,10 @@ function ProfilePage() {
       phone: phone.trim() || undefined,
       bio: bio.trim(),
       weeklyGoal: Math.max(1, Number(weeklyGoal) || 1),
-      avatar: preview,
     });
     toast.success("Perfil atualizado");
   };
+
 
   return (
     <AppLayout title="Perfil" subtitle="Personalize sua conta">
