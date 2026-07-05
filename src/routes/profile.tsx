@@ -139,11 +139,15 @@ function ProfilePage() {
             <Label className="text-xs">Meta semanal de tarefas</Label>
             <Input type="number" min={1} value={weeklyGoal} onChange={(e) => setWeeklyGoal(Number(e.target.value))} />
           </div>
-          <div className="pt-2">
+          <div className="pt-2 flex flex-wrap gap-2">
             <Button onClick={save} className="bg-neon text-neon-foreground hover:brightness-110">
               <Save className="w-4 h-4 mr-2" /> Salvar alterações
             </Button>
+            <Button variant="outline" onClick={() => openOnboardingTour(userId)}>
+              Rever tutorial
+            </Button>
           </div>
+
         </div>
       </div>
     </AppLayout>
