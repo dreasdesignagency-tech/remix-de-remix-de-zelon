@@ -6,6 +6,8 @@ import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { GlobalSearch } from "@/components/GlobalSearch";
+import { OnboardingTour } from "@/components/OnboardingTour";
+
 
 
 interface Props {
