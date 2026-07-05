@@ -6,6 +6,8 @@ import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { GlobalSearch } from "@/components/GlobalSearch";
+import { OnboardingTour } from "@/components/OnboardingTour";
+
 
 
 interface Props {
@@ -61,6 +63,8 @@ export function AppLayout({ title, subtitle, actions, children }: Props) {
         </header>
         <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide">{children}</div>
       </main>
+      <OnboardingTour />
     </div>
   );
 }
+
