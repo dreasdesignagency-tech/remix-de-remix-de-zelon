@@ -48,10 +48,16 @@ function ProfilePage() {
       toast.error("Faça login para salvar a foto");
       return;
     }
-    // instant local preview
+    // instant local preview — also push into the global store so the sidebar
+    // avatar and dashboard header update immediately, before the upload finishes.
     const reader = new FileReader();
-    reader.onload = () => setPreview(reader.result as string);
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setPreview(dataUrl);
+      updateProfile({ avatar: dataUrl });
+    };
     reader.readAsDataURL(file);
+
 
     setUploading(true);
     try {
