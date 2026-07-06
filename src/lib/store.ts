@@ -241,21 +241,40 @@ export const useApp = create<AppState>((set, get) => ({
 
   loadAll: async (userId) => {
     set({ userId, loaded: false });
-    const [tasksRes, notesRes, projectsRes, clientsRes, eventsRes, profileRes] = await Promise.all([
+    const [tasksRes, notesRes, projectsRes, clientsRes, eventsRes, profileRes, authRes] = await Promise.all([
       supabase.from("tasks").select("*").order("created_at", { ascending: false }),
       supabase.from("notes").select("*").order("updated_at", { ascending: false }),
       supabase.from("projects").select("*").order("created_at", { ascending: false }),
       supabase.from("freelancer_clients").select("*").order("created_at", { ascending: false }),
       supabase.from("events").select("*").order("date", { ascending: true }),
       supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+      supabase.auth.getUser(),
     ]);
+    let profileRow = profileRes.data as ProfileRow | null;
+    // Auto-provision a profile row when none exists (older accounts created
+    // before the handle_new_user trigger, or trigger failures). Without this,
+    // UPDATE in updateProfile affects zero rows, so name/avatar never persist
+    // and disappear on reload.
+    if (!profileRow) {
+      const user = authRes.data.user;
+      const email = user?.email ?? null;
+      const meta = (user?.user_metadata ?? {}) as { name?: string };
+      const fallbackName = meta.name || (email ? email.split("@")[0] : "Usuário");
+      const { data: inserted, error: insertErr } = await supabase
+        .from("profiles")
+        .insert({ id: userId, name: fallbackName, email, role: "social_media" } as never)
+        .select("*")
+        .maybeSingle();
+      if (insertErr) console.error("[store:loadAll.profileInsert]", insertErr.message);
+      profileRow = (inserted as ProfileRow | null) ?? null;
+    }
     set({
       tasks: ((tasksRes.data as TaskRow[] | null) ?? []).map(taskFromRow),
       notes: ((notesRes.data as NoteRow[] | null) ?? []).map(noteFromRow),
       projects: ((projectsRes.data as ProjectRow[] | null) ?? []).map(projectFromRow),
       clients: ((clientsRes.data as ClientRow[] | null) ?? []).map(clientFromRow),
       events: ((eventsRes.data as EventRow[] | null) ?? []).map(eventFromRow),
-      profile: profileRes.data ? profileFromRow(profileRes.data as ProfileRow) : defaultProfile,
+      profile: profileRow ? profileFromRow(profileRow) : defaultProfile,
       loaded: true,
     });
   },
