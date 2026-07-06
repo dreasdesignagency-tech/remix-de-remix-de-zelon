@@ -561,15 +561,20 @@ export const useApp = create<AppState>((set, get) => ({
     if ("name" in patch) row.name = patch.name;
     if ("phone" in patch) row.phone = patch.phone ?? null;
     if ("avatar" in patch) row.avatar = patch.avatar ?? null;
-    if ("role" in patch) row.role = patch.role;
+    // NOTE: `role` in the DB is a system enum (user_role) protected by an RLS
+    // WITH CHECK that forbids changing it from the client. The UI "Área de
+    // atuação" field is stored in `bio`-adjacent free text via `bio` only —
+    // do not send `role` here or the whole UPDATE fails and nothing saves.
     if ("bio" in patch) row.bio = patch.bio ?? null;
     if ("weeklyGoal" in patch) row.weekly_goal = patch.weeklyGoal;
+    if (Object.keys(row).length === 0) return;
     void supabase
       .from("profiles")
       .update(row as never)
       .eq("id", userId)
       .then(({ error }) => handle("updateProfile")(error));
   },
+
 }));
 
 export function projectProgress(projectId: string, tasks: Task[]) {
