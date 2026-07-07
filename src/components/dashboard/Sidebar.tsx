@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { LayoutDashboard, ListTodo, StickyNote, FolderKanban, CalendarDays, User, LogOut, Menu, Users } from "lucide-react";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useApp } from "@/lib/store";
