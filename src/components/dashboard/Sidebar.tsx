@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { LayoutDashboard, ListTodo, StickyNote, FolderKanban, CalendarDays, User, LogOut, Menu, Users } from "lucide-react";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useApp } from "@/lib/store";
@@ -36,13 +35,13 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Desktop / tablet: vertical rail */}
-      <aside className="hidden md:flex flex-col items-center justify-between py-4 w-12 shrink-0">
-        <div className="flex flex-col items-center gap-5">
-          <Link to="/" aria-label="Zelon" className="w-8 h-8 flex items-center justify-center">
+      {/* Desktop / tablet: expandable vertical rail */}
+      <aside className="group hidden md:flex flex-col justify-between py-4 w-14 hover:w-52 shrink-0 transition-[width] duration-300 ease-out overflow-hidden">
+        <div className="flex flex-col gap-5 px-2">
+          <Link to="/" aria-label="Zelon" className="w-10 h-10 flex items-center justify-center shrink-0">
             <img src={zelonZ} alt="Zelon" className="w-full h-full object-contain" />
           </Link>
-          <nav className="flex flex-col gap-1.5 p-1.5 rounded-full glass-card">
+          <nav className="flex flex-col gap-1 p-1.5 rounded-3xl glass-card">
             {allItems.map(({ icon: Icon, to, label }) => {
               const isActive = to === "/" ? pathname === "/" : pathname.startsWith(to);
               return (
@@ -50,17 +49,15 @@ export function Sidebar() {
                   key={to}
                   to={to}
                   aria-label={label}
-                  className="group relative w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                  title={label}
+                  className={`relative flex items-center gap-3 h-10 px-2.5 rounded-2xl transition-colors duration-200 ${
+                    isActive
+                      ? "bg-neon/15 text-neon"
+                      : "text-muted-foreground hover:text-foreground hover:bg-card-soft"
+                  }`}
                 >
-                  {isActive && (
-                    <motion.span
-                      layoutId="sidebar-active-desktop"
-                      className="absolute inset-0 rounded-full bg-neon glow-neon"
-                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                    />
-                  )}
-                  <Icon className={`relative w-4 h-4 ${isActive ? "text-neon-foreground" : ""}`} strokeWidth={2} />
-                  <span className="pointer-events-none absolute left-full ml-2 px-3 py-1.5 rounded-lg bg-popover border border-border shadow-lg text-xs font-medium whitespace-nowrap opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-150 z-50 text-popover-foreground">
+                  <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={2} />
+                  <span className="text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                     {label}
                   </span>
                 </Link>
@@ -68,23 +65,34 @@ export function Sidebar() {
             })}
           </nav>
         </div>
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col gap-2 px-2">
           <button
             onClick={logout}
             title="Sair"
             aria-label="Sair"
-            className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-3 h-10 px-2.5 rounded-2xl text-muted-foreground hover:text-foreground hover:bg-card-soft transition-colors duration-200"
           >
-            <LogOut className="w-4 h-4" strokeWidth={2} />
+            <LogOut className="w-[18px] h-[18px] shrink-0" strokeWidth={2} />
+            <span className="text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              Sair
+            </span>
           </button>
-          <Link to="/profile" className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-accent to-primary p-[1.5px] overflow-hidden">
-            {profile.avatar ? (
-              <img src={profile.avatar} alt={profile.name} className="w-full h-full rounded-full object-cover" />
-            ) : (
-              <div className="w-full h-full rounded-full bg-card flex items-center justify-center text-[10px] font-bold">
-                {(profile.name || "?").slice(0, 2).toUpperCase()}
-              </div>
-            )}
+          <Link
+            to="/profile"
+            className="flex items-center gap-3 h-10 px-1 rounded-2xl text-foreground hover:bg-card-soft transition-colors duration-200"
+          >
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-accent to-primary p-[1.5px] overflow-hidden shrink-0">
+              {profile.avatar ? (
+                <img src={profile.avatar} alt={profile.name} className="w-full h-full rounded-full object-cover" />
+              ) : (
+                <div className="w-full h-full rounded-full bg-card flex items-center justify-center text-[10px] font-bold">
+                  {(profile.name || "?").slice(0, 2).toUpperCase()}
+                </div>
+              )}
+            </div>
+            <span className="text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 truncate">
+              {profile.name || "Perfil"}
+            </span>
           </Link>
         </div>
       </aside>
@@ -101,16 +109,11 @@ export function Sidebar() {
               key={to}
               to={to}
               aria-label={label}
-              className="relative flex-1 h-10 rounded-full flex items-center justify-center text-muted-foreground"
+              className={`relative flex-1 h-10 rounded-full flex items-center justify-center ${
+                isActive ? "bg-neon/15 text-neon" : "text-muted-foreground"
+              }`}
             >
-              {isActive && (
-                <motion.span
-                  layoutId="sidebar-active-mobile"
-                  className="absolute inset-0 rounded-full bg-neon glow-neon"
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                />
-              )}
-              <Icon className={`relative w-5 h-5 ${isActive ? "text-neon-foreground" : ""}`} strokeWidth={2} />
+              <Icon className="relative w-5 h-5" strokeWidth={2} />
             </Link>
           );
         })}
