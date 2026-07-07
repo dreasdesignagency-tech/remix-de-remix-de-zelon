@@ -371,7 +371,6 @@ function ClientsPage() {
                           { v: "tarefas", l: "Tarefas" },
                           { v: "eventos", l: "Eventos" },
                           { v: "arquivos", l: "Arquivos" },
-                          { v: "anotacoes", l: "Anotações" },
                           { v: "links", l: "Links" },
                         ] as const
                       ).map((t) => (
