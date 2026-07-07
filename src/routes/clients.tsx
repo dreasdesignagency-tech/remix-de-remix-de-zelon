@@ -21,7 +21,6 @@ import {
   CheckCircle2,
   Activity,
   Link as LinkIcon,
-  Link as LinkIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
