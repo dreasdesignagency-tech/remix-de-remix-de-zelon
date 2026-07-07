@@ -20,7 +20,7 @@ import {
   ListTodo,
   CheckCircle2,
   Activity,
-  StickyNote,
+  Link as LinkIcon,
   Link as LinkIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
