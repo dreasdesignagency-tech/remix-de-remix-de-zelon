@@ -20,7 +20,6 @@ import {
   ListTodo,
   CheckCircle2,
   Activity,
-  StickyNote,
   Link as LinkIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -77,7 +76,7 @@ function ClientsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Client | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"projetos" | "tarefas" | "eventos" | "arquivos" | "anotacoes" | "links">("projetos");
+  const [activeTab, setActiveTab] = useState<"projetos" | "tarefas" | "eventos" | "arquivos" | "links">("projetos");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -371,7 +370,6 @@ function ClientsPage() {
                           { v: "tarefas", l: "Tarefas" },
                           { v: "eventos", l: "Eventos" },
                           { v: "arquivos", l: "Arquivos" },
-                          { v: "anotacoes", l: "Anotações" },
                           { v: "links", l: "Links" },
                         ] as const
                       ).map((t) => (
@@ -442,12 +440,6 @@ function ClientsPage() {
                       {activeTab === "arquivos" && (
 
                         <DriveLinksTab client={open} />
-                      )}
-                      {activeTab === "anotacoes" && (
-                        <EmptyTab
-                          icon={<StickyNote className="w-4 h-4" />}
-                          text={open.notes ? "Anotações estão no campo acima." : "Sem anotações ainda."}
-                        />
                       )}
                       {activeTab === "links" && (
                         <EmptyTab icon={<LinkIcon className="w-4 h-4" />} text="Sem links salvos." />
