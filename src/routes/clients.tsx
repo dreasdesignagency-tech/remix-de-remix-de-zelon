@@ -442,11 +442,8 @@ function ClientsPage() {
 
                         <DriveLinksTab client={open} />
                       )}
-                      {activeTab === "anotacoes" && (
-                        <EmptyTab
-                          icon={<StickyNote className="w-4 h-4" />}
-                          text={open.notes ? "Anotações estão no campo acima." : "Sem anotações ainda."}
-                        />
+                      {activeTab === "links" && (
+                        <EmptyTab icon={<LinkIcon className="w-4 h-4" />} text="Sem links salvos." />
                       )}
                       {activeTab === "links" && (
                         <EmptyTab icon={<LinkIcon className="w-4 h-4" />} text="Sem links salvos." />
