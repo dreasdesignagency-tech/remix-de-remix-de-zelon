@@ -445,9 +445,6 @@ function ClientsPage() {
                       {activeTab === "links" && (
                         <EmptyTab icon={<LinkIcon className="w-4 h-4" />} text="Sem links salvos." />
                       )}
-                      {activeTab === "links" && (
-                        <EmptyTab icon={<LinkIcon className="w-4 h-4" />} text="Sem links salvos." />
-                      )}
                     </div>
                   </section>
 
