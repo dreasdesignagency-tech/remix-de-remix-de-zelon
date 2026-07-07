@@ -77,7 +77,7 @@ function ClientsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Client | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"projetos" | "tarefas" | "eventos" | "arquivos" | "anotacoes" | "links">("projetos");
+  const [activeTab, setActiveTab] = useState<"projetos" | "tarefas" | "eventos" | "arquivos" | "links">("projetos");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
