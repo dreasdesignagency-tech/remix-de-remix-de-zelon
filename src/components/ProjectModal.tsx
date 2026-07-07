@@ -20,6 +20,7 @@ interface Props {
 export function ProjectModal({ open, onOpenChange, project, defaultDeadline }: Props) {
   const addProject = useApp((s) => s.addProject);
   const updateProject = useApp((s) => s.updateProject);
+  const clients = useApp((s) => s.clients);
 
   const [name, setName] = useState("");
   const [client, setClient] = useState("");
@@ -59,6 +60,8 @@ export function ProjectModal({ open, onOpenChange, project, defaultDeadline }: P
     onOpenChange(false);
   };
 
+  const NONE = "__none__";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="!bg-popover border-border shadow-2xl max-w-lg">
@@ -73,13 +76,38 @@ export function ProjectModal({ open, onOpenChange, project, defaultDeadline }: P
           <div className="grid grid-cols-2 gap-2">
             <div>
               <Label className="text-xs">Cliente</Label>
-              <Input value={client} onChange={(e) => setClient(e.target.value)} placeholder="Opcional" />
+              {clients.length > 0 ? (
+                <Select
+                  value={client ? client : NONE}
+                  onValueChange={(v) => setClient(v === NONE ? "" : v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um cliente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>Sem cliente</SelectItem>
+                    {clients.map((c) => (
+                      <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                    ))}
+                    {client && !clients.some((c) => c.name === client) && (
+                      <SelectItem value={client}>{client} (atual)</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  value={client}
+                  onChange={(e) => setClient(e.target.value)}
+                  placeholder="Nenhum cliente cadastrado"
+                />
+              )}
             </div>
             <div>
               <Label className="text-xs">Prazo</Label>
               <Input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
             </div>
           </div>
+
           <div>
             <Label className="text-xs">Status</Label>
             <Select value={status} onValueChange={(v) => setStatus(v as ProjectStatus)}>
