@@ -36,8 +36,8 @@ export function Sidebar() {
   return (
     <>
       {/* Desktop / tablet: expandable vertical rail */}
-      <aside className="group hidden md:flex flex-col justify-between py-4 w-14 hover:w-52 shrink-0 transition-[width] duration-300 ease-out overflow-hidden">
-        <div className="flex flex-col gap-5 px-2">
+      <aside className="group hidden md:flex flex-col py-4 w-14 hover:w-56 shrink-0 transition-[width] duration-300 ease-out overflow-hidden">
+        <div className="flex flex-col gap-4 px-2">
           <Link to="/" aria-label="Zelon" className="w-10 h-10 flex items-center justify-center shrink-0">
             <img src={zelonZ} alt="Zelon" className="w-full h-full object-contain" />
           </Link>
@@ -63,37 +63,38 @@ export function Sidebar() {
                 </Link>
               );
             })}
+            <div className="my-1 h-px bg-border/40 mx-2" />
+            <button
+              onClick={logout}
+              title="Sair"
+              aria-label="Sair"
+              className="flex items-center gap-3 h-10 px-2.5 rounded-2xl text-muted-foreground hover:text-foreground hover:bg-card-soft transition-colors duration-200"
+            >
+              <LogOut className="w-[18px] h-[18px] shrink-0" strokeWidth={2} />
+              <span className="text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                Sair
+              </span>
+            </button>
+            <Link
+              to="/profile"
+              aria-label={profile.name || "Perfil"}
+              title={profile.name || "Perfil"}
+              className="flex items-center gap-3 h-10 px-1.5 rounded-2xl text-foreground hover:bg-card-soft transition-colors duration-200"
+            >
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-accent to-primary p-[1.5px] overflow-hidden shrink-0">
+                {profile.avatar ? (
+                  <img src={profile.avatar} alt={profile.name} className="w-full h-full rounded-full object-cover" />
+                ) : (
+                  <div className="w-full h-full rounded-full bg-card flex items-center justify-center text-[10px] font-bold">
+                    {(profile.name || "?").slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <span className="text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 truncate">
+                {profile.name || "Perfil"}
+              </span>
+            </Link>
           </nav>
-        </div>
-        <div className="flex flex-col gap-2 px-2">
-          <button
-            onClick={logout}
-            title="Sair"
-            aria-label="Sair"
-            className="flex items-center gap-3 h-10 px-2.5 rounded-2xl text-muted-foreground hover:text-foreground hover:bg-card-soft transition-colors duration-200"
-          >
-            <LogOut className="w-[18px] h-[18px] shrink-0" strokeWidth={2} />
-            <span className="text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              Sair
-            </span>
-          </button>
-          <Link
-            to="/profile"
-            className="flex items-center gap-3 h-10 px-1 rounded-2xl text-foreground hover:bg-card-soft transition-colors duration-200"
-          >
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-accent to-primary p-[1.5px] overflow-hidden shrink-0">
-              {profile.avatar ? (
-                <img src={profile.avatar} alt={profile.name} className="w-full h-full rounded-full object-cover" />
-              ) : (
-                <div className="w-full h-full rounded-full bg-card flex items-center justify-center text-[10px] font-bold">
-                  {(profile.name || "?").slice(0, 2).toUpperCase()}
-                </div>
-              )}
-            </div>
-            <span className="text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 truncate">
-              {profile.name || "Perfil"}
-            </span>
-          </Link>
         </div>
       </aside>
 
