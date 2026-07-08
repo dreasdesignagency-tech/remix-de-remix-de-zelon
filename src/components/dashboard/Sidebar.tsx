@@ -50,7 +50,7 @@ export function Sidebar() {
                   to={to}
                   aria-label={label}
                   title={label}
-                  className={`relative flex items-center gap-3 h-10 px-2.5 rounded-2xl transition-colors duration-200 ${
+                  className={`relative flex items-center justify-center group-hover:justify-start gap-0 group-hover:gap-3 h-10 px-2.5 rounded-2xl transition-colors duration-200 ${
                     isActive
                       ? "bg-neon/15 text-neon"
                       : "text-muted-foreground hover:text-foreground hover:bg-card-soft"
