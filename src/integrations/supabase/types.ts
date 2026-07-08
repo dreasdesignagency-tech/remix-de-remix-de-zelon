@@ -306,6 +306,7 @@ export type Database = {
         Row: {
           company: string | null
           created_at: string
+          drive_links: Json
           email: string | null
           id: string
           instagram: string | null
@@ -321,6 +322,7 @@ export type Database = {
         Insert: {
           company?: string | null
           created_at?: string
+          drive_links?: Json
           email?: string | null
           id?: string
           instagram?: string | null
@@ -336,6 +338,7 @@ export type Database = {
         Update: {
           company?: string | null
           created_at?: string
+          drive_links?: Json
           email?: string | null
           id?: string
           instagram?: string | null
