@@ -68,7 +68,7 @@ export function Sidebar() {
               onClick={logout}
               title="Sair"
               aria-label="Sair"
-              className="flex items-center gap-3 h-10 px-2.5 rounded-2xl text-muted-foreground hover:text-foreground hover:bg-card-soft transition-colors duration-200"
+              className="flex items-center gap-3 h-10 px-3 rounded-2xl text-muted-foreground hover:text-foreground hover:bg-card-soft transition-colors duration-200"
             >
               <LogOut className="w-[18px] h-[18px] shrink-0" strokeWidth={2} />
               <span className="text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -79,7 +79,7 @@ export function Sidebar() {
               to="/profile"
               aria-label={profile.name || "Perfil"}
               title={profile.name || "Perfil"}
-              className="flex items-center gap-3 h-10 px-1.5 rounded-2xl text-foreground hover:bg-card-soft transition-colors duration-200"
+              className="flex items-center gap-3 h-10 px-2 rounded-2xl text-foreground hover:bg-card-soft transition-colors duration-200"
             >
               <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-accent to-primary p-[1.5px] overflow-hidden shrink-0">
                 {profile.avatar ? (
