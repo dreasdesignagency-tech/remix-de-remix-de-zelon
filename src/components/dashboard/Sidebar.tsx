@@ -36,12 +36,12 @@ export function Sidebar() {
   return (
     <>
       {/* Desktop / tablet: expandable vertical rail */}
-      <aside className="group hidden md:flex flex-col py-4 w-14 hover:w-56 shrink-0 transition-[width] duration-300 ease-out overflow-hidden">
-        <div className="flex flex-col gap-4 px-2">
+      <aside className="group hidden md:flex flex-col py-4 w-16 hover:w-60 shrink-0 transition-[width] duration-300 ease-out overflow-hidden">
+        <div className="flex flex-col gap-4 px-3">
           <Link to="/" aria-label="Zelon" className="w-10 h-10 flex items-center justify-center shrink-0">
             <img src={zelonZ} alt="Zelon" className="w-full h-full object-contain" />
           </Link>
-          <nav className="flex flex-col gap-1 p-1.5 rounded-3xl glass-card">
+          <nav className="flex flex-col gap-1 p-2 rounded-3xl glass-card">
             {allItems.map(({ icon: Icon, to, label }) => {
               const isActive = to === "/" ? pathname === "/" : pathname.startsWith(to);
               return (
@@ -50,7 +50,7 @@ export function Sidebar() {
                   to={to}
                   aria-label={label}
                   title={label}
-                  className={`relative flex items-center gap-3 h-10 px-2.5 rounded-2xl transition-colors duration-200 ${
+                  className={`relative flex items-center gap-3 h-10 px-3 rounded-2xl transition-colors duration-200 ${
                     isActive
                       ? "bg-neon/15 text-neon"
                       : "text-muted-foreground hover:text-foreground hover:bg-card-soft"
