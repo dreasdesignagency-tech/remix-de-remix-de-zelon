@@ -79,7 +79,7 @@ export function Sidebar() {
               to="/profile"
               aria-label={profile.name || "Perfil"}
               title={profile.name || "Perfil"}
-              className="flex items-center gap-3 h-10 px-1.5 rounded-2xl text-foreground hover:bg-card-soft transition-colors duration-200"
+              className="flex items-center justify-center group-hover:justify-start gap-0 group-hover:gap-3 h-10 px-1.5 rounded-2xl text-foreground hover:bg-card-soft transition-colors duration-200"
             >
               <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-accent to-primary p-[1.5px] overflow-hidden shrink-0">
                 {profile.avatar ? (
