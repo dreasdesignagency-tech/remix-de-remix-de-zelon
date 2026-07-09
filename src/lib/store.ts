@@ -74,6 +74,7 @@ type ProfileRow = {
   phone: string | null;
   avatar: string | null;
   role: string;
+  field_of_work: string | null;
   bio: string | null;
   weekly_goal: number;
 };
@@ -135,7 +136,7 @@ const profileFromRow = (r: ProfileRow): Profile => ({
   email: r.email ?? undefined,
   phone: r.phone ?? undefined,
   avatar: r.avatar ?? undefined,
-  role: r.role ?? "",
+  role: r.field_of_work ?? "",
   bio: r.bio ?? "",
   weeklyGoal: r.weekly_goal ?? 20,
 });
@@ -580,10 +581,9 @@ export const useApp = create<AppState>((set, get) => ({
     if ("name" in patch) row.name = patch.name;
     if ("phone" in patch) row.phone = patch.phone ?? null;
     if ("avatar" in patch) row.avatar = patch.avatar ?? null;
-    // NOTE: `role` in the DB is a system enum (user_role) protected by an RLS
-    // WITH CHECK that forbids changing it from the client. The UI "Área de
-    // atuação" field is stored in `bio`-adjacent free text via `bio` only —
-    // do not send `role` here or the whole UPDATE fails and nothing saves.
+    // `role` in the DB is a protected enum; the UI "Área de atuação" is
+    // persisted to the free-text `field_of_work` column instead.
+    if ("role" in patch) row.field_of_work = patch.role ?? null;
     if ("bio" in patch) row.bio = patch.bio ?? null;
     if ("weeklyGoal" in patch) row.weekly_goal = patch.weeklyGoal;
     if (Object.keys(row).length === 0) return;
