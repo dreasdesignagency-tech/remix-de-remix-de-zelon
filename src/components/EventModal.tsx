@@ -1,15 +1,12 @@
-import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useEffect, useMemo, useState } from "react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useApp } from "@/lib/store";
-import type { EventItem, EventCategory, EventReminder, Priority } from "@/lib/types";
-import { EVENT_CATEGORY_META, EVENT_REMINDER_META, PRIORITY_META } from "@/lib/types";
+import type { EventItem, EventCategory } from "@/lib/types";
+import { EVENT_CATEGORY_META } from "@/lib/types";
+import { ChevronDown, Video, Trash2 } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -18,55 +15,58 @@ interface Props {
   defaults?: Partial<EventItem>;
 }
 
-const REMINDER_KEYS: EventReminder[] = ["1d", "1h", "15m"];
+const COLOR_OPTIONS: { key: EventCategory; color: string; label: string }[] = (
+  Object.keys(EVENT_CATEGORY_META) as EventCategory[]
+).map((k) => ({ key: k, color: EVENT_CATEGORY_META[k].color, label: EVENT_CATEGORY_META[k].label }));
 
 export function EventModal({ open, onOpenChange, event, defaults }: Props) {
   const addEvent = useApp((s) => s.addEvent);
   const updateEvent = useApp((s) => s.updateEvent);
   const deleteEvent = useApp((s) => s.deleteEvent);
-  const clients = useApp((s) => s.clients);
-  const projects = useApp((s) => s.projects);
-  const tasks = useApp((s) => s.tasks);
-  const notes = useApp((s) => s.notes);
+
+  const isEdit = !!event;
+  const today = format(new Date(), "yyyy-MM-dd");
 
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [date, setDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
-  const [category, setCategory] = useState<EventCategory>("reuniao");
-  const [priority, setPriority] = useState<Priority>("medium");
-  const [color, setColor] = useState<string>("");
   const [location, setLocation] = useState("");
-  const [meetingLink, setMeetingLink] = useState("");
-  const [clientId, setClientId] = useState("none");
-  const [projectId, setProjectId] = useState("none");
-  const [taskId, setTaskId] = useState("none");
-  const [noteId, setNoteId] = useState("none");
-  const [reminders, setReminders] = useState<EventReminder[]>([]);
+  const [date, setDate] = useState(today);
+  const [endDate, setEndDate] = useState(today);
+  const [start, setStart] = useState("09:00");
+  const [end, setEnd] = useState("10:00");
+  const [allDay, setAllDay] = useState(false);
+  const [guests, setGuests] = useState("");
+  const [notes, setNotes] = useState("");
+  const [category, setCategory] = useState<EventCategory>("evento");
+  const [showColorMenu, setShowColorMenu] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     const src: Partial<EventItem> = event ?? defaults ?? {};
+    const d = src.date ?? today;
     setTitle(src.title ?? "");
-    setDescription(src.description ?? "");
-    setDate(src.date ?? "");
-    setStartTime(src.startTime ?? "");
-    setEndTime(src.endTime ?? "");
-    setCategory((src.category as EventCategory) ?? "reuniao");
-    setPriority((src.priority as Priority) ?? "medium");
-    setColor(src.color ?? "");
-    setLocation(src.location ?? "");
-    setMeetingLink(src.meetingLink ?? "");
-    setClientId(src.clientId ?? "none");
-    setProjectId(src.projectId ?? "none");
-    setTaskId(src.taskId ?? "none");
-    setNoteId(src.noteId ?? "none");
-    setReminders(src.reminders ?? []);
-  }, [open, event, defaults]);
+    setLocation(src.location ?? src.meetingLink ?? "");
+    setDate(d);
+    setEndDate(d);
+    setStart(src.startTime ?? "09:00");
+    setEnd(src.endTime ?? "10:00");
+    setAllDay(!src.startTime && !src.endTime && isEdit);
+    setGuests("");
+    setNotes(src.description ?? "");
+    setCategory((src.category as EventCategory) ?? "evento");
+    setExpanded(false);
+    setShowColorMenu(false);
+  }, [open, event, defaults, isEdit, today]);
 
-  const toggleReminder = (r: EventReminder) =>
-    setReminders((cur) => (cur.includes(r) ? cur.filter((x) => x !== r) : [...cur, r]));
+  const dateLabel = useMemo(() => {
+    try {
+      return format(parseISO(date), "d 'de' MMM. 'de' yyyy", { locale: ptBR });
+    } catch {
+      return date;
+    }
+  }, [date]);
+
+  const accent = EVENT_CATEGORY_META[category].color;
 
   const submit = () => {
     if (!title.trim()) {
@@ -75,27 +75,23 @@ export function EventModal({ open, onOpenChange, event, defaults }: Props) {
     }
     const data = {
       title: title.trim(),
-      description: description.trim() || undefined,
-      date: date || undefined,
-      startTime: startTime || undefined,
-      endTime: endTime || undefined,
+      description: notes.trim() || undefined,
+      date,
+      startTime: allDay ? undefined : start,
+      endTime: allDay ? undefined : end,
       category,
-      priority,
-      color: color || undefined,
+      priority: "medium" as const,
+      color: EVENT_CATEGORY_META[category].color,
       location: location.trim() || undefined,
-      meetingLink: meetingLink.trim() || undefined,
-      clientId: clientId === "none" ? undefined : clientId,
-      projectId: projectId === "none" ? undefined : projectId,
-      taskId: taskId === "none" ? undefined : taskId,
-      noteId: noteId === "none" ? undefined : noteId,
-      reminders,
+      meetingLink: undefined,
+      reminders: [],
     };
     if (event) {
       updateEvent(event.id, data);
       toast.success("Evento atualizado");
     } else {
       addEvent(data);
-      toast.success("Evento criado");
+      toast.success("Novo evento criado");
     }
     onOpenChange(false);
   };
@@ -109,168 +105,167 @@ export function EventModal({ open, onOpenChange, event, defaults }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!bg-popover border-border shadow-2xl max-w-xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{event ? "Editar evento" : "Novo evento"}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <Label className="text-xs">Título</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Reunião de briefing" />
-          </div>
-          <div>
-            <Label className="text-xs">Descrição</Label>
-            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <div>
-              <Label className="text-xs">Data</Label>
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            </div>
-            <div>
-              <Label className="text-xs">Início</Label>
-              <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
-            </div>
-            <div>
-              <Label className="text-xs">Fim</Label>
-              <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label className="text-xs">Categoria</Label>
-              <Select value={category} onValueChange={(v) => setCategory(v as EventCategory)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {Object.entries(EVENT_CATEGORY_META).map(([k, m]) => (
-                    <SelectItem key={k} value={k}>{m.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Prioridade</Label>
-              <Select value={priority} onValueChange={(v) => setPriority(v as Priority)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {Object.entries(PRIORITY_META).map(([k, m]) => (
-                    <SelectItem key={k} value={k}>{m.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label className="text-xs">Cliente</Label>
-              <Select value={clientId} onValueChange={setClientId}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Sem cliente</SelectItem>
-                  {clients.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Projeto</Label>
-              <Select value={projectId} onValueChange={setProjectId}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Sem projeto</SelectItem>
-                  {projects.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label className="text-xs">Tarefa relacionada</Label>
-              <Select value={taskId} onValueChange={setTaskId}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhuma</SelectItem>
-                  {tasks.slice(0, 50).map((t) => (
-                    <SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Anotação relacionada</Label>
-              <Select value={noteId} onValueChange={setNoteId}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhuma</SelectItem>
-                  {notes.slice(0, 50).map((n) => (
-                    <SelectItem key={n.id} value={n.id}>{n.title}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label className="text-xs">Local</Label>
-              <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Endereço, sala..." />
-            </div>
-            <div>
-              <Label className="text-xs">Link da reunião</Label>
-              <Input value={meetingLink} onChange={(e) => setMeetingLink(e.target.value)} placeholder="https://meet.google.com/..." />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2 items-end">
-            <div>
-              <Label className="text-xs">Cor</Label>
-              <Input
-                type="color"
-                value={color || "#7c5cff"}
-                onChange={(e) => setColor(e.target.value)}
-                className="h-10 p-1 cursor-pointer"
-              />
-            </div>
-            <div>
-              <Label className="text-xs">Lembretes</Label>
-              <div className="flex gap-1.5 mt-1.5">
-                {REMINDER_KEYS.map((r) => {
-                  const active = reminders.includes(r);
-                  return (
-                    <button
-                      key={r}
-                      type="button"
-                      onClick={() => toggleReminder(r)}
-                      className={[
-                        "px-2.5 py-1.5 rounded-full text-[11px] font-medium border transition-colors",
-                        active
-                          ? "bg-electric text-electric-foreground border-transparent"
-                          : "bg-card-soft/60 text-muted-foreground border-border hover:text-foreground",
-                      ].join(" ")}
-                    >
-                      {EVENT_REMINDER_META[r].label}
-                    </button>
-                  );
-                })}
+      <DialogContent
+        className="w-[380px] max-w-[95vw] p-0 rounded-2xl border border-white/10 bg-[#1f1f22] text-white shadow-2xl overflow-hidden gap-0"
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          document.getElementById("event-modal-title")?.focus();
+        }}
+      >
+        {/* Title row */}
+        <div className="px-4 pt-3.5 pb-3 flex items-start gap-3">
+          <input
+            id="event-modal-title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
+            placeholder={isEdit ? "Título do evento" : "Novo Evento"}
+            className="flex-1 bg-transparent text-[17px] font-semibold placeholder:text-white/90 focus:outline-none"
+          />
+          <div className="relative">
+            <button
+              onClick={() => setShowColorMenu((v) => !v)}
+              className="flex items-center gap-1 h-6 px-1.5 rounded-md bg-white/10 hover:bg-white/15 transition-colors"
+              aria-label="Categoria"
+            >
+              <span className="w-3 h-3 rounded-sm" style={{ background: accent }} />
+              <ChevronDown className="w-3 h-3 text-white/70" />
+            </button>
+            {showColorMenu && (
+              <div className="absolute right-0 mt-1 z-10 bg-[#2a2a2e] border border-white/10 rounded-lg p-1.5 shadow-xl grid grid-cols-4 gap-1 w-[140px]">
+                {COLOR_OPTIONS.map((c) => (
+                  <button
+                    key={c.key}
+                    title={c.label}
+                    onClick={() => { setCategory(c.key); setShowColorMenu(false); }}
+                    className={`w-6 h-6 rounded-md ring-1 ring-white/10 hover:scale-110 transition-transform ${category === c.key ? "ring-2 ring-white" : ""}`}
+                    style={{ background: c.color }}
+                  />
+                ))}
               </div>
-            </div>
-          </div>
-        </div>
-        <DialogFooter className="!justify-between">
-          <div>
-            {event && (
-              <Button variant="ghost" onClick={handleDelete} className="text-destructive hover:text-destructive">
-                <Trash2 className="w-4 h-4 mr-1" /> Excluir
-              </Button>
             )}
           </div>
-          <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button onClick={submit} className="bg-neon text-neon-foreground hover:brightness-110">Salvar</Button>
+        </div>
+
+        {/* Location */}
+        <div className="px-4 pb-3 flex items-center gap-3 border-b border-white/10">
+          <input
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="Adicionar Localização ou Ligação de Vídeo"
+            className="flex-1 bg-transparent text-[13px] placeholder:text-white/40 focus:outline-none"
+          />
+          <Video className="w-4 h-4 text-white/60" />
+        </div>
+
+        {/* Date/time */}
+        {!expanded ? (
+          <button
+            onClick={() => setExpanded(true)}
+            className="w-full px-4 py-3 text-left text-[13px] font-medium hover:bg-white/5 transition-colors border-b border-white/10"
+          >
+            {allDay ? dateLabel : `${dateLabel}  ${start} a ${end}`}
+          </button>
+        ) : (
+          <div className="px-4 py-3 border-b border-white/10 space-y-2 text-[12px]">
+            <Row label="dia inteiro:">
+              <input
+                type="checkbox"
+                checked={allDay}
+                onChange={(e) => setAllDay(e.target.checked)}
+                className="w-3.5 h-3.5"
+                style={{ accentColor: accent }}
+              />
+            </Row>
+            <Row label="começa:">
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="bg-transparent text-white font-medium focus:outline-none"
+              />
+              {!allDay && (
+                <input
+                  type="time"
+                  value={start}
+                  onChange={(e) => setStart(e.target.value)}
+                  className="bg-transparent text-white font-medium focus:outline-none ml-2"
+                />
+              )}
+            </Row>
+            <Row label="termina:">
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="bg-transparent text-white font-medium focus:outline-none"
+              />
+              {!allDay && (
+                <input
+                  type="time"
+                  value={end}
+                  onChange={(e) => setEnd(e.target.value)}
+                  className="bg-transparent text-white font-medium focus:outline-none ml-2"
+                />
+              )}
+            </Row>
           </div>
-        </DialogFooter>
+        )}
+
+        {/* Guests */}
+        <input
+          value={guests}
+          onChange={(e) => setGuests(e.target.value)}
+          placeholder="Adicionar Convidados"
+          className="w-full px-4 py-3 bg-transparent text-[13px] placeholder:text-white/40 focus:outline-none border-b border-white/10"
+        />
+
+        {/* Notes */}
+        <input
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Adicionar Notas, URL ou Anexos"
+          className="w-full px-4 py-3 bg-transparent text-[13px] placeholder:text-white/40 focus:outline-none"
+        />
+
+        {/* Footer */}
+        <div className="flex items-center justify-between gap-2 px-3 py-2.5 bg-black/20 border-t border-white/10">
+          <div>
+            {isEdit && (
+              <button
+                onClick={handleDelete}
+                className="h-7 px-2 rounded-md text-[12px] text-red-300 hover:text-red-200 hover:bg-white/10 transition-colors flex items-center gap-1"
+              >
+                <Trash2 className="w-3 h-3" /> Excluir
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onOpenChange(false)}
+              className="h-7 px-3 rounded-md text-[12px] text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={submit}
+              className="h-7 px-3 rounded-md text-[12px] font-medium text-white hover:brightness-110 transition"
+              style={{ background: accent }}
+            >
+              {isEdit ? "Salvar" : "+ Adicionar"}
+            </button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-[110px_1fr] items-center gap-2">
+      <span className="text-white/50 text-right">{label}</span>
+      <div className="flex items-center text-white">{children}</div>
+    </div>
   );
 }
