@@ -3,12 +3,12 @@ import { AppLayout } from "@/components/AppLayout";
 import { useApp } from "@/lib/store";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Pin, PinOff, Pencil, Trash2, Search, FolderOpen, Folder, ArrowLeft } from "lucide-react";
+import { Plus, Pin, PinOff, Pencil, Trash2, Search, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NoteModal } from "@/components/NoteModal";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { FolderCard } from "@/components/FolderCard";
+import { PostItCard } from "@/components/PostItCard";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Note } from "@/lib/types";
@@ -81,7 +81,7 @@ function NotesPage() {
   return (
     <AppLayout
       title="Anotações"
-      subtitle="Suas ideias organizadas em pastas"
+      subtitle="Suas ideias em post-its"
       actions={
         <Button
           onClick={() => openNewNote(undefined)}
@@ -97,7 +97,7 @@ function NotesPage() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar pasta ou nota..."
+            placeholder="Buscar post-it ou nota..."
             className="bg-transparent outline-none text-xs w-full"
           />
         </div>
@@ -105,23 +105,22 @@ function NotesPage() {
         {visibleFolders.length === 0 ? (
           <div className="glass-card rounded-3xl p-16 text-center">
             <p className="text-sm text-muted-foreground">
-              Sem anotações ainda. Adicione tags às suas notas para organizá-las em pastas.
+              Sem anotações ainda. Adicione tags às suas notas para agrupá-las em post-its.
             </p>
             <Button onClick={() => openNewNote(undefined)} variant="ghost" className="mt-3">
               <Plus className="w-4 h-4 mr-1" /> Criar anotação
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 gap-y-6 pt-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-x-6 gap-y-10 pt-4 px-2">
             {visibleFolders.map((f, idx) => (
-              <FolderCard
+              <PostItCard
                 key={f.key}
                 title={f.label}
                 subtitle={`${f.notes.length} ${f.notes.length === 1 ? "nota" : "notas"}`}
                 description={f.sample}
                 meta={`Atualizada ${format(f.lastUpdated, "dd MMM yyyy", { locale: ptBR })}`}
-                icon={idx === 0 ? <FolderOpen className="w-5 h-5" /> : <Folder className="w-5 h-5" />}
-                accent={idx === 0}
+                variant={idx}
                 onClick={() => setOpenFolder(f.key)}
               />
             ))}
