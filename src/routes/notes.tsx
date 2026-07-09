@@ -135,7 +135,7 @@ function NotesPage() {
               <button onClick={() => setOpenFolder(null)} className="p-1 rounded-lg hover:bg-card-soft">
                 <ArrowLeft className="w-4 h-4" />
               </button>
-              <FolderOpen className="w-4 h-4" />
+              <span className="w-3 h-3 rounded-sm bg-electric" />
               {current?.label}
               <span className="text-xs text-muted-foreground font-normal">({currentNotes.length})</span>
             </DialogTitle>
